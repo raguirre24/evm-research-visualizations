@@ -136,6 +136,9 @@
             position: relative;
             height: 400px;
             margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
         }
 
         .chart {
@@ -176,6 +179,7 @@
             border-radius: 4px;
             outline: none;
             -webkit-appearance: none;
+            cursor: pointer;
         }
 
         input[type="range"]::-webkit-slider-thumb {
@@ -185,6 +189,15 @@
             background: #667eea;
             border-radius: 50%;
             cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
         }
 
         .performance-indicators {
@@ -320,25 +333,22 @@
     </div>
 
     <script>
-        // Chart setup
-        const canvas = document.getElementById('evmChart');
-        const ctx = canvas.getContext('2d');
-        
-        // Make canvas responsive
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            drawChart();
-        }
-        
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Project parameters
+        // Global variables
         const BAC = 1000000; // Budget at Completion
         let currentTime = 50; // Current time as percentage
         let scheduleOffset = 0; // Schedule performance offset
         let costMultiplier = 1; // Cost performance multiplier
+        
+        // Get canvas and context
+        const canvas = document.getElementById('evmChart');
+        const ctx = canvas.getContext('2d');
+        
+        // Set initial canvas size
+        function setupCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth - 20; // Account for padding
+            canvas.height = container.clientHeight - 20;
+        }
 
         // Chart drawing function
         function drawChart() {
@@ -348,8 +358,9 @@
             const chartWidth = width - 2 * padding;
             const chartHeight = height - 2 * padding;
 
-            // Clear canvas
-            ctx.clearRect(0, 0, width, height);
+            // Clear canvas with background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, width, height);
 
             // Draw grid
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -389,12 +400,16 @@
             ctx.textAlign = 'center';
             ctx.fillText('Time (%)', width / 2, height - 20);
             
+            // Y-axis label
             ctx.save();
             ctx.translate(20, height / 2);
             ctx.rotate(-Math.PI / 2);
             ctx.fillText('Value ($)', 0, 0);
             ctx.restore();
 
+            // Calculate values
+            const evProgress = Math.max(0, Math.min(100, currentTime + scheduleOffset));
+            
             // Draw PV line (diagonal from 0,0 to 100,BAC)
             ctx.strokeStyle = '#667eea';
             ctx.lineWidth = 3;
@@ -412,7 +427,6 @@
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(padding, height - padding);
-            const evProgress = Math.max(0, Math.min(100, currentTime + scheduleOffset));
             for (let t = 0; t <= currentTime; t += 2) {
                 const x = padding + (chartWidth / 100) * t;
                 const actualProgress = (evProgress / currentTime) * t;
@@ -464,7 +478,7 @@
                 ctx.fillText(item.label, legendX + 25, legendY + 5);
             });
 
-            // Draw value markers
+            // Draw value markers at current time
             const markerX = currentX;
             const pvY = height - padding - (chartHeight / 100) * currentTime;
             const evY = height - padding - (chartHeight / 100) * evProgress;
@@ -487,17 +501,31 @@
             ctx.beginPath();
             ctx.arc(markerX, acY, 6, 0, Math.PI * 2);
             ctx.fill();
+
+            // Value labels at markers
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            
+            const pv = (BAC * currentTime) / 100;
+            const ev = (BAC * evProgress) / 100;
+            const ac = ev * costMultiplier;
+            
+            ctx.fillText('PV: $' + Math.round(pv).toLocaleString(), markerX + 10, pvY);
+            ctx.fillText('EV: $' + Math.round(ev).toLocaleString(), markerX + 10, evY);
+            ctx.fillText('AC: $' + Math.round(ac).toLocaleString(), markerX + 10, acY);
         }
 
         // Update functions
         function updateSimulation() {
             const pv = (BAC * currentTime) / 100;
-            const ev = (BAC * (currentTime + scheduleOffset)) / 100;
+            const evProgress = Math.max(0, Math.min(100, currentTime + scheduleOffset));
+            const ev = (BAC * evProgress) / 100;
             const ac = ev * costMultiplier;
 
             // Calculate performance indices
-            const spi = ev / pv;
-            const cpi = ev / ac;
+            const spi = pv > 0 ? ev / pv : 1;
+            const cpi = ac > 0 ? ev / ac : 1;
             const sv = ev - pv;
             const cv = ev - ac;
 
@@ -513,6 +541,7 @@
             updateIndicatorColor('svIndicator', sv, -50000, 50000);
             updateIndicatorColor('cvIndicator', cv, -50000, 50000);
 
+            // Redraw chart
             drawChart();
         }
 
@@ -562,9 +591,21 @@
             event.currentTarget.classList.add('pulse');
         }
 
-        // Initialize
+        // Window resize handler
+        window.addEventListener('resize', function() {
+            setupCanvas();
+            drawChart();
+        });
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            setupCanvas();
+            updateSimulation();
+        });
+
+        // Also initialize immediately in case load event already fired
+        setupCanvas();
         updateSimulation();
     </script>
 </body>
 </html>
-
