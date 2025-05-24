@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVM Implementation Framework - New Zealand Construction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .framework-section {
+            margin-bottom: 60px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .section-header p {
+            font-size: 1.1em;
+            color: #4a5568;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .implementation-phases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .phase-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .phase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .phase-number {
+            position: absolute;
+            top: -15px;
+            left: 30px;
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .phase-title {
+            font-size: 1.5em;
+            color: #2d3748;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+
+        .phase-description {
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .phase-checklist {
+            list-style: none;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            color: #2d3748;
+        }
+
+        .checklist-item::before {
+            content: '✓';
+            color: #48bb78;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .tool-comparison {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            overflow-x: auto;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .comparison-table th {
+            background: #f7fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .comparison-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .rating {
+            display: inline-flex;
+            gap: 3px;
+        }
+
+        .star {
+            color: #ecc94b;
+            font-size: 1.2em;
+        }
+
+        .star.empty {
+            color: #e2e8f0;
+        }
+
+        .interactive-roadmap {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            margin-bottom: 50px;
+        }
+
+        .roadmap-timeline {
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .timeline-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e2e8f0;
+            transform: translateY(-50%);
+        }
+
+        .timeline-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%);
+            width: 0%;
+            transition: width 2s ease;
+        }
+
+        .roadmap-items {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .roadmap-item {
+            text-align: center;
+            flex: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .roadmap-dot {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid #e2e8f0;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            transition: all 0.3s ease;
+        }
+
+        .roadmap-item.active .roadmap-dot {
+            border-color: #3182ce;
+            background: #3182ce;
+            transform: scale(1.3);
+        }
+
+        .roadmap-item:hover .roadmap-dot {
+            transform: scale(1.2);
+        }
+
+        .roadmap-label {
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .roadmap-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+        }
+
+        .benefit-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .benefit-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .benefit-value {
+            font-size: 2em;
+            color: #3182ce;
+            font-weight: bold;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .cta-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .cta-description {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .cta-button.primary {
+            background: white;
+            color: #2c5282;
+        }
+
+        .cta-button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .cta-button.secondary:hover {
+            background: white;
+            color: #2c5282;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+            
+            .section-header h2 {
+                font-size: 1.8em;
+            }
+            
+            .roadmap-items {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .timeline-track {
+                width: 4px;
+                height: 100%;
+                left: 50%;
+                top: 0;
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>EVM Implementation Framework</h1>
+        <p>A Practical Guide for New Zealand Construction Projects</p>
+    </div>
+
+    <div class="container">
+        <!-- Implementation Phases -->
+        <div class="framework-section">
+            <div class="section-header">
+                <h2>5-Phase Implementation Approach</h2>
+                <p>Based on successful case studies and international best practices</p>
+            </div>
+
+            <div class="implementation-phases">
+                <div class="phase-card" onclick="expandPhase(1)">
+                    <div class="phase-number">1</div>
+                    <h3 class="phase-title">Foundation Setup</h3>
+                    <p class="phase-description">Establish the groundwork for EVM implementation</p>
+                    <ul class="phase-checklist">
+                        <li class="checklist-item">Define project scope and objectives</li>
+                        <li class="checklist-item">Create Work Breakdown Structure (WBS)</li>
+                        <li class="checklist-item">Align Cost Breakdown Structure (CBS)</li>
+                        <li class="checklist-item">Select appropriate tools and systems</li>
+                        <li class="checklist-item">Train key personnel</li>
+                    </ul>
+                </div>
+
+                <div class="phase-card" onclick="expandPhase(2)">
+                    <div class="phase-number">2</div>
+                    <h3 class="phase-title">Baseline Development</h3>
+                    <p class="phase-description">Create the performance measurement baseline</p>
+                    <ul class="phase-checklist">
+                        <li class="checklist-item">Develop integrated project schedule</li>
+                        <li class="checklist-item">Allocate budgets to activities</li>
+                        <li class="checklist-item">Account for procurement milestones</li>
+                        <li class="checklist-item">Establish reporting periods</li>
+                        <li class="checklist-item">Document baseline assumptions</li>
+                    </ul>
+                </div>
+
+                <div class="phase-card" onclick="expandPhase(3)">
+                    <div class="phase-number">3</div>
+                    <h3 class="phase-title">System Integration</h3>
+                    <p class="phase-description">Connect EVM with existing project systems</p>
+                    <ul class="phase-checklist">
+                        <li class="checklist-item">Link scheduling and cost systems</li>
+                        <li class="checklist-item">Configure data integration workflows</li>
+                        <li class="checklist-item">Set up automated reporting</li>
+                        <li class="checklist-item">Test data accuracy and flow</li>
+                        <li class="checklist-item">Implement quality checks</li>
+                    </ul>
+                </div>
+
+                <div class="phase-card" onclick="expandPhase(4)">
+                    <div class="phase-number">4</div>
+                    <h3 class="phase-title">Performance Tracking</h3>
+                    <p class="phase-description">Monitor and measure project performance</p>
+                    <ul class="phase-checklist">
+                        <li class="checklist-item">Update progress regularly</li>
+                        <li class="checklist-item">Record actual costs accurately</li>
+                        <li class="checklist-item">Calculate performance indices</li>
+                        <li class="checklist-item">Analyze variances and trends</li>
+                        <li class="checklist-item">Generate performance reports</li>
+                    </ul>
+                </div>
+
+                <div class="phase-card" onclick="expandPhase(5)">
+                    <div class="phase-number">5</div>
+                    <h3 class="phase-title">Continuous Improvement</h3>
+                    <p class="phase-description">Optimize and refine the EVM process</p>
+                    <ul class="phase-checklist">
+                        <li class="checklist-item">Review performance data with teams</li>
+                        <li class="checklist-item">Identify improvement opportunities</li>
+                        <li class="checklist-item">Update baselines when necessary</li>
+                        <li class="checklist-item">Share lessons learned</li>
+                        <li class="checklist-item">Refine processes and tools</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Roadmap -->
+        <div class="interactive-roadmap">
+            <h2 style="text-align: center; margin-bottom: 30px;">Implementation Timeline</h2>
+            <div class="roadmap-timeline">
+                <div class="timeline-track">
+                    <div class="timeline-progress" id="timelineProgress"></div>
+                </div>
+                <div class="roadmap-items">
+                    <div class="roadmap-item active" onclick="selectRoadmapItem(0)">
+                        <div class="roadmap-dot"></div>
+                        <div class="roadmap-label">Month 1</div>
+                        <div class="roadmap-title">Project Setup</div>
+                    </div>
+                    <div class="roadmap-item" onclick="selectRoadmapItem(1)">
+                        <div class="roadmap-dot"></div>
+                        <div class="roadmap-label">Month 2</div>
+                        <div class="roadmap-title">Baseline Creation</div>
+                    </div>
+                    <div class="roadmap-item" onclick="selectRoadmapItem(2)">
+                        <div class="roadmap-dot"></div>
+                        <div class="roadmap-label">Month 3</div>
+                        <div class="roadmap-title">First Reports</div>
+                    </div>
+                    <div class="roadmap-item" onclick="selectRoadmapItem(3)">
+                        <div class="roadmap-dot"></div>
+                        <div class="roadmap-label">Month 4</div>
+                        <div class="roadmap-title">Optimization</div>
+                    </div>
+                    <div class="roadmap-item" onclick="selectRoadmapItem(4)">
+                        <div class="roadmap-dot"></div>
+                        <div class="roadmap-label">Ongoing</div>
+                        <div class="roadmap-title">Full Operation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tool Comparison -->
+        <div class="tool-comparison">
+            <h2 style="text-align: center; margin-bottom: 30px;">EVM Tool Selection Guide</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Tool/Platform</th>
+                        <th>Cost</th>
+                        <th>Complexity</th>
+                        <th>Integration</th>
+                        <th>Best For</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Power BI + P6</strong></td>
+                        <td>Medium</td>
+                        <td>Medium</td>
+                        <td>Excellent</td>
+                        <td>Large projects with multiple systems</td>
+                        <td>
+                            <div class="rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Primavera P6 Native</strong></td>
+                        <td>High</td>
+                        <td>High</td>
+                        <td>Limited</td>
+                        <td>Schedule-focused projects</td>
+                        <td>
+                            <div class="rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star empty">★</span>
+                                <span class="star empty">★</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Excel + Manual</strong></td>
+                        <td>Low</td>
+                        <td>Low</td>
+                        <td>Manual</td>
+                        <td>Small projects, pilots</td>
+                        <td>
+                            <div class="rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star empty">★</span>
+                                <span class="star empty">★</span>
+                                <span class="star empty">★</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deltek Cobra</strong></td>
+                        <td>Very High</td>
+                        <td>Very High</td>
+                        <td>Good</td>
+                        <td>Enterprise-level programs</td>
+                        <td>
+                            <div class="rating">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star empty">★</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Benefits -->
+        <div class="framework-section">
+            <div class="section-header">
+                <h2>Expected Benefits</h2>
+                <p>Based on the Rā Hihi case study and international benchmarks</p>
+            </div>
+
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">💰</div>
+                    <div class="benefit-title">Cost Savings</div>
+                    <div class="benefit-value">4-8%</div>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">⏱️</div>
+                    <div class="benefit-title">Schedule Improvement</div>
+                    <div class="benefit-value">10-15%</div>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">📊</div>
+                    <div class="benefit-title">Forecast Accuracy</div>
+                    <div class="benefit-value">±5%</div>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🎯</div>
+                    <div class="benefit-title">On-Time Delivery</div>
+                    <div class="benefit-value">+40%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <h2 class="cta-title">Ready to Implement EVM?</h2>
+            <p class="cta-description">Join the transformation of New Zealand's construction industry</p>
+            <div class="cta-buttons">
+                <a href="#" class="cta-button primary">Download Framework Guide</a>
+                <a href="#" class="cta-button secondary">Request Consultation</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animate timeline progress on load
+        setTimeout(() => {
+            document.getElementById('timelineProgress').style.width = '100%';
+        }, 500);
+
+        // Roadmap item selection
+        let currentRoadmapItem = 0;
+        
+        function selectRoadmapItem(index) {
+            const items = document.querySelectorAll('.roadmap-item');
+            items.forEach((item, i) => {
+                item.classList.toggle('active', i <= index);
+            });
+            
+            const progress = ((index + 1) / items.length) * 100;
+            document.getElementById('timelineProgress').style.width = progress + '%';
+            currentRoadmapItem = index;
+        }
+
+        // Phase expansion animation
+        function expandPhase(phaseNumber) {
+            const card = event.currentTarget;
+            card.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // Automatic roadmap progression
+        function autoProgressRoadmap() {
+            if (currentRoadmapItem < 4) {
+                selectRoadmapItem(currentRoadmapItem + 1);
+            } else {
+                selectRoadmapItem(0);
+            }
+        }
+
+        // Start automatic progression after 3 seconds
+        setTimeout(() => {
+            setInterval(autoProgressRoadmap, 3000);
+        }, 3000);
+
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Apply scroll animations to elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const animatedElements = document.querySelectorAll('.phase-card, .benefit-card');
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

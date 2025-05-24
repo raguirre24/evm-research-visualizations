@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>International EVM Adoption Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #4a5568;
+        }
+
+        .world-map {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+            position: relative;
+            min-height: 500px;
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #f7fafc;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .country-marker {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .country-marker:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .country-flag {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .country-name {
+            text-align: center;
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 0.9em;
+        }
+
+        .adoption-level {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .adoption-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .country-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .country-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .country-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .country-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .country-icon {
+            font-size: 40px;
+            margin-right: 15px;
+        }
+
+        .country-info h3 {
+            font-size: 1.3em;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .country-subtitle {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .metrics-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric-label {
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .details-section {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .detail-content {
+            color: #4a5568;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .radar-chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 40px;
+        }
+
+        .radar-chart {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .key-findings {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .finding-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .finding-icon {
+            width: 40px;
+            height: 40px;
+            background: #edf2f7;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .finding-content {
+            flex: 1;
+        }
+
+        .finding-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .finding-description {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .nz-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .nz-highlight h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .nz-highlight p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .country-marker {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .country-flag {
+                width: 50px;
+                height: 50px;
+                font-size: 25px;
+            }
+            
+            .country-name {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>International EVM Adoption Comparison</h1>
+            <p>Benchmarking New Zealand Against Global Leaders</p>
+        </div>
+
+        <div class="nz-highlight">
+            <h2>New Zealand's Position</h2>
+            <p>With NZTA's new mandate for projects over $5M, New Zealand is transitioning from minimal to structured EVM adoption</p>
+        </div>
+
+        <div class="world-map">
+            <h2 style="margin-bottom: 20px; color: #2d3748;">Global EVM Maturity Map</h2>
+            <div class="map-container" id="mapContainer">
+                <!-- Country markers will be positioned here -->
+            </div>
+        </div>
+
+        <div class="comparison-grid" id="countryGrid">
+            <!-- Country cards will be generated here -->
+        </div>
+
+        <div class="radar-chart-container">
+            <h2 style="margin-bottom: 20px; color: #2d3748; text-align: center;">EVM Maturity Comparison</h2>
+            <canvas id="radarChart" class="radar-chart"></canvas>
+        </div>
+
+        <div class="key-findings">
+            <h2 style="margin-bottom: 25px; color: #2d3748;">Key Findings for New Zealand</h2>
+            
+            <div class="finding-item">
+                <div class="finding-icon">📊</div>
+                <div class="finding-content">
+                    <div class="finding-title">Standardization Gap</div>
+                    <div class="finding-description">
+                        Unlike Australia (AS 4817), US (ANSI/EIA-748), and UK (APM standards), New Zealand lacks national EVM standards, creating implementation inconsistencies.
+                    </div>
+                </div>
+            </div>
+
+            <div class="finding-item">
+                <div class="finding-icon">🎯</div>
+                <div class="finding-content">
+                    <div class="finding-title">Mandatory Implementation</div>
+                    <div class="finding-description">
+                        NZTA's new requirement for projects >$5M follows the US model of mandatory implementation but without the supporting framework and training infrastructure.
+                    </div>
+                </div>
+            </div>
+
+            <div class="finding-item">
+                <div class="finding-icon">🔄</div>
+                <div class="finding-content">
+                    <div class="finding-title">Industry Readiness</div>
+                    <div class="finding-description">
+                        With only 12% of projects completing on time and 90% experiencing delays, the need for EVM is clear, but industry capability remains underdeveloped.
+                    </div>
+                </div>
+            </div>
+
+            <div class="finding-item">
+                <div class="finding-icon">💡</div>
+                <div class="finding-content">
+                    <div class="finding-title">Opportunity for Leadership</div>
+                    <div class="finding-description">
+                        New Zealand can leverage lessons from international implementations, particularly Australia's practical approach and the UK's professional development model.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Country data
+        const countries = [
+            {
+                name: 'United States',
+                flag: '🇺🇸',
+                position: { x: 15, y: 30 },
+                adoption: 90,
+                maturity: {
+                    standards: 10,
+                    mandate: 10,
+                    training: 9,
+                    tools: 9,
+                    culture: 8
+                },
+                details: {
+                    sectors: 'Defense, Energy, NASA',
+                    implementation: 'Mandatory for major acquisitions',
+                    standards: 'ANSI/EIA-748, EVMSIG',
+                    keyPoint: 'Birthplace of EVM with most mature framework'
+                }
+            },
+            {
+                name: 'United Kingdom',
+                flag: '🇬🇧',
+                position: { x: 45, y: 25 },
+                adoption: 85,
+                maturity: {
+                    standards: 9,
+                    mandate: 8,
+                    training: 10,
+                    tools: 8,
+                    culture: 9
+                },
+                details: {
+                    sectors: 'Defence, Rail, Energy',
+                    implementation: 'Robust implementation, extensive adoption',
+                    standards: 'APM EVM certification',
+                    keyPoint: 'Strong professional development and certification'
+                }
+            },
+            {
+                name: 'Australia',
+                flag: '🇦🇺',
+                position: { x: 75, y: 65 },
+                adoption: 70,
+                maturity: {
+                    standards: 8,
+                    mandate: 6,
+                    training: 7,
+                    tools: 7,
+                    culture: 7
+                },
+                details: {
+                    sectors: 'Defence, Mining, Infrastructure',
+                    implementation: 'Moderate adoption, selective use',
+                    standards: 'AS 4817-2019, ISO 21500',
+                    keyPoint: 'Regional leader with practical approach'
+                }
+            },
+            {
+                name: 'Canada',
+                flag: '🇨🇦',
+                position: { x: 20, y: 20 },
+                adoption: 65,
+                maturity: {
+                    standards: 6,
+                    mandate: 5,
+                    training: 6,
+                    tools: 7,
+                    culture: 6
+                },
+                details: {
+                    sectors: 'Defence, Major Procurement',
+                    implementation: 'Selective adoption',
+                    standards: 'References US standards',
+                    keyPoint: 'Follows US practices without local standards'
+                }
+            },
+            {
+                name: 'New Zealand',
+                flag: '🇳🇿',
+                position: { x: 85, y: 70 },
+                adoption: 35,
+                maturity: {
+                    standards: 3,
+                    mandate: 5,
+                    training: 3,
+                    tools: 4,
+                    culture: 3
+                },
+                details: {
+                    sectors: 'Infrastructure (emerging)',
+                    implementation: 'New NZTA mandate for >$5M projects',
+                    standards: 'No national standards',
+                    keyPoint: 'Transitioning from minimal to structured adoption'
+                }
+            }
+        ];
+
+        // Initialize map markers
+        function initializeMap() {
+            const mapContainer = document.getElementById('mapContainer');
+            
+            countries.forEach((country, index) => {
+                const marker = document.createElement('div');
+                marker.className = 'country-marker';
+                marker.style.left = country.position.x + '%';
+                marker.style.top = country.position.y + '%';
+                marker.style.transform = 'translate(-50%, -50%)';
+                
+                marker.innerHTML = `
+                    <div class="country-flag">${country.flag}</div>
+                    <div class="country-name">${country.name}</div>
+                    <div class="adoption-level">
+                        <div class="adoption-bar" style="width: 0%"></div>
+                    </div>
+                `;
+                
+                marker.addEventListener('click', () => highlightCountry(index));
+                mapContainer.appendChild(marker);
+                
+                // Animate adoption bar
+                setTimeout(() => {
+                    marker.querySelector('.adoption-bar').style.width = country.adoption + '%';
+                }, 100 + index * 100);
+            });
+        }
+
+        // Generate country cards
+        function generateCountryCards() {
+            const grid = document.getElementById('countryGrid');
+            
+            countries.forEach((country, index) => {
+                const card = document.createElement('div');
+                card.className = 'country-card';
+                if (country.name === 'New Zealand') {
+                    card.style.borderTop = '4px solid #667eea';
+                }
+                
+                card.innerHTML = `
+                    <div class="country-header">
+                        <div class="country-icon">${country.flag}</div>
+                        <div class="country-info">
+                            <h3>${country.name}</h3>
+                            <div class="country-subtitle">EVM Adoption: ${country.adoption}%</div>
+                        </div>
+                    </div>
+                    <ul class="metrics-list">
+                        <li class="metric-item">
+                            <span class="metric-label">Primary Sectors</span>
+                            <span class="metric-value" style="font-size: 0.85em">${country.details.sectors}</span>
+                        </li>
+                        <li class="metric-item">
+                            <span class="metric-label">Standards</span>
+                            <span class="metric-value" style="font-size: 0.85em">${country.details.standards}</span>
+                        </li>
+                    </ul>
+                    <div class="details-section">
+                        <div class="detail-title">Key Characteristic</div>
+                        <div class="detail-content">${country.details.keyPoint}</div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => highlightCountry(index));
+                grid.appendChild(card);
+            });
+        }
+
+        // Radar chart setup
+        function createRadarChart() {
+            const canvas = document.getElementById('radarChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = 500;
+            canvas.height = 500;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 180;
+            
+            // Chart parameters
+            const categories = ['Standards', 'Mandate', 'Training', 'Tools', 'Culture'];
+            const numCategories = categories.length;
+            const angleStep = (Math.PI * 2) / numCategories;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid circles
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 5; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, (radius / 5) * i, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = '#cbd5e0';
+            for (let i = 0; i < numCategories; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // Category labels
+                ctx.fillStyle = '#2d3748';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                const labelX = centerX + Math.cos(angle) * (radius + 30);
+                const labelY = centerY + Math.sin(angle) * (radius + 30);
+                ctx.fillText(categories[i], labelX, labelY);
+            }
+            
+            // Draw country data
+            const colors = ['#3182ce', '#38a169', '#d69e2e', '#e53e3e', '#667eea'];
+            
+            countries.forEach((country, countryIndex) => {
+                ctx.beginPath();
+                ctx.strokeStyle = colors[countryIndex];
+                ctx.fillStyle = colors[countryIndex] + '20';
+                ctx.lineWidth = 2;
+                
+                const values = [
+                    country.maturity.standards,
+                    country.maturity.mandate,
+                    country.maturity.training,
+                    country.maturity.tools,
+                    country.maturity.culture
+                ];
+                
+                values.forEach((value, i) => {
+                    const angle = i * angleStep - Math.PI / 2;
+                    const distance = (value / 10) * radius;
+                    const x = centerX + Math.cos(angle) * distance;
+                    const y = centerY + Math.sin(angle) * distance;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+            
+            // Legend
+            ctx.font = '12px sans-serif';
+            countries.forEach((country, index) => {
+                ctx.fillStyle = colors[index];
+                ctx.fillRect(20, 20 + index * 25, 15, 15);
+                ctx.fillStyle = '#2d3748';
+                ctx.textAlign = 'left';
+                ctx.fillText(country.name, 40, 32 + index * 25);
+            });
+        }
+
+        // Highlight country function
+        function highlightCountry(index) {
+            const cards = document.querySelectorAll('.country-card');
+            cards.forEach((card, i) => {
+                if (i === index) {
+                    card.style.transform = 'scale(1.05)';
+                    card.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.2)';
+                } else {
+                    card.style.transform = 'scale(1)';
+                    card.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)';
+                }
+            });
+            
+            // Scroll to card
+            cards[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Initialize everything
+        initializeMap();
+        generateCountryCards();
+        createRadarChart();
+    </script>
+</body>
+</html>

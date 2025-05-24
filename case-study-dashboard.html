@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rā Hihi EVM Case Study - Interactive Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #3730a3;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card.success::before {
+            background: #10b981;
+        }
+
+        .stat-card.warning::before {
+            background: #f59e0b;
+        }
+
+        .stat-card.danger::before {
+            background: #ef4444;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: #eff6ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 0.85em;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #f3f4f6;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+            background: #d1fae5;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .chart-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.5em;
+            color: #1f2937;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9em;
+        }
+
+        .control-btn:hover {
+            background: #f9fafb;
+        }
+
+        .control-btn.active {
+            background: #3730a3;
+            color: white;
+            border-color: #3730a3;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timeline-content {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            width: calc(50% - 40px);
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: auto;
+        }
+
+        .timeline-date {
+            position: absolute;
+            top: 20px;
+            width: 120px;
+            text-align: center;
+            font-weight: bold;
+            color: #3730a3;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-date {
+            right: calc(50% + 40px);
+        }
+
+        .timeline-item:nth-child(even) .timeline-date {
+            left: calc(50% + 40px);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            width: 16px;
+            height: 16px;
+            background: #3730a3;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #e5e7eb;
+        }
+
+        .performance-chart {
+            height: 400px;
+            position: relative;
+        }
+
+        .lessons-learned {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .lesson-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-card:hover {
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lesson-icon {
+            width: 40px;
+            height: 40px;
+            background: #dbeafe;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .lesson-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .lesson-description {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .timeline-content {
+                width: calc(100% - 40px);
+                margin-left: 40px !important;
+            }
+
+            .timeline-line {
+                left: 20px;
+            }
+
+            .timeline-dot {
+                left: 20px;
+            }
+
+            .timeline-date {
+                position: static;
+                margin-bottom: 10px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Rā Hihi (Reeves Road Flyover)</h1>
+        <p>EVM Implementation Case Study - Real-time Performance Dashboard</p>
+    </div>
+
+    <div class="container">
+        <!-- Key Performance Stats -->
+        <div class="stats-grid">
+            <div class="stat-card success">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">Project Duration</div>
+                <div class="stat-value">18 months</div>
+                <div class="stat-change positive">
+                    <span>↓</span> 3 months ahead
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">💰</div>
+                <div class="stat-label">Cost Performance</div>
+                <div class="stat-value">4% savings</div>
+                <div class="stat-change positive">
+                    <span>↑</span> Under budget
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏗️</div>
+                <div class="stat-label">Project Scale</div>
+                <div class="stat-value">600m</div>
+                <div class="stat-change">Bridge length</div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">Final CPI</div>
+                <div class="stat-value">1.04</div>
+                <div class="stat-change positive">
+                    <span>↑</span> Cost efficient
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <h2 class="chart-title">Performance Indices Over Time</h2>
+                <div class="chart-controls">
+                    <button class="control-btn active" onclick="toggleChart('both')">Both</button>
+                    <button class="control-btn" onclick="toggleChart('spi')">SPI Only</button>
+                    <button class="control-btn" onclick="toggleChart('cpi')">CPI Only</button>
+                </div>
+            </div>
+            <div class="performance-chart">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Implementation Timeline -->
+        <div class="chart-section">
+            <h2 class="chart-title">EVM Implementation Journey</h2>
+            <div class="timeline">
+                <div class="timeline-line"></div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">April 2024</div>
+                    <div class="timeline-content">
+                        <h3>EVM Implementation Begins</h3>
+                        <p>Board requested EVM reporting at cost account level. Power BI selected over P6 native functionality for better integration.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">May 2024</div>
+                    <div class="timeline-content">
+                        <h3>Initial CPI Deviation</h3>
+                        <p>CPI showed significant negative variance due to advance payments for Super-T beam fabrication not aligned with earned value.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">June 2024</div>
+                    <div class="timeline-content">
+                        <h3>Baseline Adjustment</h3>
+                        <p>Procurement activities incorporated into programme. Cost allocation recalibrated to match payment milestones.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">Feb 2025</div>
+                    <div class="timeline-content">
+                        <h3>Performance Validation</h3>
+                        <p>4% cost savings confirmed. Schedule advanced by 3 months. EVM predictions validated by bi-annual review.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lessons Learned -->
+        <div class="chart-section">
+            <h2 class="chart-title">Key Lessons Learned</h2>
+            <div class="lessons-learned">
+                <div class="lesson-card">
+                    <div class="lesson-icon">🔗</div>
+                    <div class="lesson-title">System Integration</div>
+                    <div class="lesson-description">
+                        Successfully integrated EVM with existing CBS and P6 systems, proving specialized software isn't always necessary.
+                    </div>
+                </div>
+
+                <div class="lesson-card">
+                    <div class="lesson-icon">💳</div>
+                    <div class="lesson-title">Payment Alignment</div>
+                    <div class="lesson-description">
+                        Critical to align cost recognition with value earning patterns, especially for advance payments in construction.
+                    </div>
+                </div>
+
+                <div class="lesson-card">
+                    <div class="lesson-icon">📊</div>
+                    <div class="lesson-title">Tool Selection</div>
+                    <div class="lesson-description">
+                        Power BI provided superior data integration and accessibility compared to native P6 functionality.
+                    </div>
+                </div>
+
+                <div class="lesson-card">
+                    <div class="lesson-icon">✅</div>
+                    <div class="lesson-title">Metric Reliability</div>
+                    <div class="lesson-description">
+                        Post-baseline adjustment, EVM metrics accurately predicted project outcomes validated by external reviews.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Performance chart setup
+        const canvas = document.getElementById('performanceChart');
+        const ctx = canvas.getContext('2d');
+        
+        // Responsive canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            drawPerformanceChart();
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Chart data
+        const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'];
+        const spiData = [1.0, 0.95, 0.98, 1.02, 1.05, 1.08, 1.10, 1.12, 1.15, 1.18, 1.20];
+        const cpiData = [0.85, 0.88, 1.02, 1.01, 1.03, 1.02, 1.04, 1.03, 1.04, 1.04, 1.04];
+        
+        let chartMode = 'both';
+
+        function drawPerformanceChart() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 60;
+            const chartWidth = width - 2 * padding;
+            const chartHeight = height - 2 * padding;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw grid
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (chartHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+                
+                // Y-axis labels
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'right';
+                const value = 1.4 - (i * 0.2);
+                ctx.fillText(value.toFixed(1), padding - 10, y + 4);
+            }
+
+            // Draw axes
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(padding, padding);
+            ctx.stroke();
+
+            // Draw baseline (1.0)
+            const baselineY = padding + chartHeight * (1 - ((1.0 - 0.4) / 1.0));
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, baselineY);
+            ctx.lineTo(width - padding, baselineY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // X-axis labels
+            months.forEach((month, index) => {
+                const x = padding + (chartWidth / (months.length - 1)) * index;
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(month, x, height - padding + 20);
+            });
+
+            // Draw SPI line
+            if (chartMode === 'both' || chartMode === 'spi') {
+                ctx.strokeStyle = '#3730a3';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                spiData.forEach((value, index) => {
+                    const x = padding + (chartWidth / (months.length - 1)) * index;
+                    const y = padding + chartHeight * (1 - ((value - 0.4) / 1.0));
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+
+                // Draw SPI points
+                spiData.forEach((value, index) => {
+                    const x = padding + (chartWidth / (months.length - 1)) * index;
+                    const y = padding + chartHeight * (1 - ((value - 0.4) / 1.0));
+                    
+                    ctx.fillStyle = '#3730a3';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // Draw CPI line
+            if (chartMode === 'both' || chartMode === 'cpi') {
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                cpiData.forEach((value, index) => {
+                    const x = padding + (chartWidth / (months.length - 1)) * index;
+                    const y = padding + chartHeight * (1 - ((value - 0.4) / 1.0));
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+
+                // Draw CPI points
+                cpiData.forEach((value, index) => {
+                    const x = padding + (chartWidth / (months.length - 1)) * index;
+                    const y = padding + chartHeight * (1 - ((value - 0.4) / 1.0));
+                    
+                    ctx.fillStyle = '#10b981';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // Legend
+            const legendY = padding - 30;
+            if (chartMode === 'both' || chartMode === 'spi') {
+                ctx.fillStyle = '#3730a3';
+                ctx.fillRect(width - 200, legendY, 20, 3);
+                ctx.fillStyle = '#374151';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('SPI (Schedule)', width - 170, legendY + 5);
+            }
+            
+            if (chartMode === 'both' || chartMode === 'cpi') {
+                const offset = chartMode === 'both' ? 80 : 0;
+                ctx.fillStyle = '#10b981';
+                ctx.fillRect(width - 200 + offset, legendY, 20, 3);
+                ctx.fillStyle = '#374151';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('CPI (Cost)', width - 170 + offset, legendY + 5);
+            }
+
+            // Highlight baseline adjustment period
+            if (chartMode === 'both' || chartMode === 'cpi') {
+                const adjustmentStartX = padding + (chartWidth / (months.length - 1)) * 1;
+                const adjustmentEndX = padding + (chartWidth / (months.length - 1)) * 2;
+                
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+                ctx.fillRect(adjustmentStartX, padding, adjustmentEndX - adjustmentStartX, chartHeight);
+                
+                ctx.fillStyle = '#ef4444';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Baseline', (adjustmentStartX + adjustmentEndX) / 2, padding + 20);
+                ctx.fillText('Adjustment', (adjustmentStartX + adjustmentEndX) / 2, padding + 35);
+            }
+        }
+
+        function toggleChart(mode) {
+            chartMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            drawPerformanceChart();
+        }
+
+        // Initialize
+        drawPerformanceChart();
+    </script>
+</body>
+</html>
